@@ -40,6 +40,15 @@ GOAL := barcode_scanner.elf
 
 ${GOAL}: $(addsuffix .o, $(basename ${C_SRCS} ${CXX_SRCS}))
 
+QT_INC := $(shell ls -d /usr/include/*-linux-gnu/qt* | sort -V | tail -n 1)
+QT_VER := $(shell echo ${QT_INC} | sed 's/.*qt\([0-9]\+\)/\1/')
+ifneq ($(shell [ ${QT_VER} -gt 5 ] && echo Y || echo ""),)
+CXX_STD := c++17
+endif
+CXX_INCLUDES := -I/usr/include/opencv4 -I${QT_INC}
+CXX_LDFLAGS := -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui \
+    -lQt${QT_VER}Core -lZXing
+
 -include ${THIRD_PARTY_DIR}/${LCS_ALIAS}/makefile/c_and_cpp.mk
 
 
