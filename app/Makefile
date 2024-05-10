@@ -46,8 +46,8 @@ ifneq ($(shell [ ${QT_VER} -gt 5 ] && echo Y || echo ""),)
 CXX_STD := c++17
 endif
 CXX_INCLUDES := -I/usr/include/opencv4 -I${QT_INC}
-CXX_LDFLAGS := -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui \
-    -lQt${QT_VER}Core -lZXing
+CXX_LDFLAGS := -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui -lopencv_videoio \
+    -lQt${QT_VER}Core -lQt${QT_VER}Gui -lZXing
 
 -include ${THIRD_PARTY_DIR}/${LCS_ALIAS}/makefile/c_and_cpp.mk
 
