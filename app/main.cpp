@@ -18,67 +18,110 @@
 
 #include <stdio.h>
 
-#include <string>
-#include <algorithm>
-#include <iostream>
+#include <map>
 
-#include <opencv2/core/types.hpp>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
-#include <ZXing/BarcodeFormat.h>
-#include <ZXing/DecodeHints.h>
-#include <ZXing/ReadBarcode.h>
-#include <ZXing/Result.h>
-#include <ZXing/DecodeStatus.h>
-#include <QtCore/QString>
+#include "versions.hpp"
+#include "cmdline_args.hpp"
+#include "biz_test_camera.hpp"
+#include "biz_detect_from_images.hpp"
+#include "biz_detect_from_camera.hpp"
+
+typedef struct conf_file
+{
+#ifdef HAS_CONFIG_FILE
+    std::string path;
+#endif
+} conf_file_t;
+
+static int load_config_file(const char *path, conf_file_t &result)
+{
+#ifdef HAS_CONFIG_FILE
+    todo();
+#endif
+    return 0;
+}
+
+static void unload_config_file(conf_file_t &result)
+{
+#ifdef HAS_CONFIG_FILE
+    todo();
+#endif
+}
+
+int logger_init(const cmd_args_t &args, const conf_file_t &conf)
+{
+#ifdef HAS_LOGGER
+    todo();
+#endif
+    return 0;
+}
+
+void logger_finalize(void)
+{
+#ifdef HAS_LOGGER
+    todo();
+#endif
+}
+
+int register_signals(const cmd_args_t &args, const conf_file_t &conf)
+{
+#ifdef NEED_OS_SIGNALS
+    todo();
+#endif
+    return 0;
+}
 
 int main(int argc, char **argv)
 {
-    if (argc < 2)
+    cmd_args_t parsed_args = parse_cmdline(argc, argv);
+    conf_file_t conf;
+    std::map<std::string, std::map<std::string, biz_func_t>> biz_handlers = {
+        {
+            "normal",
+            {
+                { "camera", BIZ_FUN(detect_from_camera) },
+                { "pic", BIZ_FUN(detect_from_images) },
+            }
+        },
+        {
+            "test",
+            {
+                { "camera", BIZ_FUN(test_camera) },
+            }
+        },
+    };
+    biz_func_t biz_func = nullptr;
+    int ret;
+
+    assert_parsed_args(parsed_args);
+
+    if ((ret = load_config_file(parsed_args.config_file.c_str(), conf)) < 0)
+        return -ret;
+
+    if ((ret = logger_init(parsed_args, conf)) < 0)
+        goto lbl_unload_conf;
+
+    if ((ret = register_signals(parsed_args, conf)) < 0)
+        goto lbl_finalize_log;
+
+    if (nullptr == (biz_func = biz_handlers[parsed_args.biz][parsed_args.source]))
     {
-        std::cerr << "Usage: " << argv[0] << " /path/to/barcode/image" << std::endl;
-        return EXIT_FAILURE;
+        ret = -ENOTSUP;
+        fprintf(stderr, "*** Combination of biz[%s] and source[%s] is not supported yet!\n",
+            parsed_args.biz.c_str(), parsed_args.source.c_str());
+    }
+    else
+    {
+        ret = biz_func(argc, argv, parsed_args, conf);
     }
 
-    cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
-    auto img_view = ZXing::ImageView(image.data, image.cols, image.rows, ZXing::ImageFormat::BGR);
-    ZXing::DecodeHints hints;
-    const auto &result = ZXing::ReadBarcode(img_view, hints.setFormats(ZXing::BarcodeFormat::Any));
+lbl_finalize_log:
+    logger_finalize();
 
-    if (ZXing::DecodeStatus::NoError != result.status())
-    {
-        std::cerr << "Failed to detect: " << ZXing::ToString(result.status()) << std::endl;
-        return EXIT_FAILURE;
-    }
+lbl_unload_conf:
+    unload_config_file(conf);
 
-    const auto &pos = result.position();
-    const auto &top_left = pos.topLeft();
-    const auto &bottom_right = pos.bottomRight();
-    auto center = ZXing::Position::Point(std::min(top_left.x, bottom_right.x) + abs(bottom_right.x - top_left.x) / 2,
-        std::min(top_left.y, bottom_right.y) + abs(bottom_right.y - top_left.y) / 2);
-    const cv::Scalar color(0, 0, 255);
-    const int thickness = 2;
-
-#if 0
-    cv::rectangle(image, cv::Point(top_left.x, top_left.y), cv::Point(bottom_right.x, bottom_right.y),
-        color, thickness, cv::LineTypes::LINE_AA);
-#endif
-    for (const auto &p : { top_left, pos.topRight(), pos.bottomLeft(), bottom_right, center })
-    {
-        cv::drawMarker(image, cv::Point(p.x, p.y), color, cv::MarkerTypes::MARKER_DIAMOND,
-            /* markerSize = */20, thickness);
-    }
-    cv::imshow("Barcode Test", image);
-    cv::waitKey(0);
-    std::cout << "Type: " << ZXing::ToString(result.format()) << std::endl
-        << "Text: " << QString::fromStdWString(result.text()).toStdString() << std::endl
-        << "Orientation: " << result.orientation() << std::endl
-        << "Error Correction Level: " << QString::fromStdWString(result.ecLevel()).toStdString() << std::endl
-        << "Bits: " << result.numBits() << std::endl;
-
-    return EXIT_SUCCESS;
+    return abs(ret);
 }
 
 /*
@@ -88,5 +131,13 @@ int main(int argc, char **argv)
  *
  * >>> 2024-05-03, Man Hung-Coeng <udc577@126.com>:
  *  01. Create.
+ *
+ * >>> 2024-05-04, Man Hung-Coeng <udc577@126.com>:
+ *  01. Implement a demo of detecting from an image file.
+ *
+ * >>> 2024-05-10, Man Hung-Coeng <udc577@126.com>:
+ *  01. Support detecting from multiple image files.
+ *  02. Add a normal biz type of detecting from camera (unimplemented),
+ *      and a test biz type of capturing frames from camera.
  */
 
