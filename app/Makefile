@@ -27,21 +27,26 @@ all: init
 
 LCS_ALIAS := lazy_coding
 export THIRD_PARTY_DIR ?= ../3rdpary
+export NO_PRIV_STUFF := $(strip $(filter-out n N no NO No 0, ${NO_PRIV_STUFF}))
 
 -include ${THIRD_PARTY_DIR}/${LCS_ALIAS}/makefile/__ver__.mk
 
 
 
 
-C_SRCS := $(shell find ./ -name "*.c")
-C_SRCS := $(foreach i, $(filter-out %.priv.c, ${C_SRCS}), \
-    $(if $(wildcard $(basename ${i}).priv.c), $(basename ${i}).priv.c, ${i}) \
-)
+C_SRCS := $(shell find ./ -name "*.c" | grep -v '\.priv\.c$$')
+ifeq (${NO_PRIV_STUFF},)
+    C_SRCS := $(foreach i, $(filter-out %.priv.c, ${C_SRCS}), \
+        $(if $(wildcard $(basename ${i}).priv.c), $(basename ${i}).priv.c, ${i}) \
+    )
+endif
 
-CXX_SRCS := $(shell find ./ -name "*.cpp" -o -name "*.cc" -o -name "*.cxx")
-CXX_SRCS := $(foreach i, $(filter-out $(addprefix %.priv, $(suffix ${CXX_SRCS})), ${CXX_SRCS}), \
-    $(if $(wildcard $(basename ${i}).priv$(suffix ${i})), $(basename ${i}).priv$(suffix ${i}), ${i}) \
-)
+CXX_SRCS := $(shell find ./ -name "*.cpp" -o -name "*.cc" -o -name "*.cxx" | grep -v '\.priv\.[^.]\+$$')
+ifeq (${NO_PRIV_STUFF},)
+    CXX_SRCS := $(foreach i, $(filter-out $(addprefix %.priv, $(suffix ${CXX_SRCS})), ${CXX_SRCS}), \
+        $(if $(wildcard $(basename ${i}).priv$(suffix ${i})), $(basename ${i}).priv$(suffix ${i}), ${i}) \
+    )
+endif
 
 GOAL := barcode_scanner.elf
 
@@ -75,10 +80,8 @@ THIRD_PARTY_PROJECTS := ${LCS_ALIAS}@@partial@@git@@main@@${LCS_URL} \
     #nvidia-docker-v2.12.0@@by-tag@@git@@main@@https://gitlab.com/nvidia/container-toolkit/nvidia-docker \
     #nvidia-docker-80902fe3afab@@by-hash@@git@@main@@git@gitlab.com:nvidia/container-toolkit/nvidia-docker.git \
     #rt-thread@@by-tag@@git@@master@@https://gitee.com/rtthread/rt-thread.git \
-    # FIXME: Add more items ahead of this line if needed. \
     # Beware that each line should begin with 4 spaces and end with a backslash.
 CHKOUT ?= ${LCS_ALIAS}
-# FIXME: You probably want to modify this directory.
 # For a formal project, $(abspath ./__chkout__) or somewhere else might be better.
 CHKOUT_CONF_DIR := ${THIRD_PARTY_DIR}
 
@@ -153,11 +156,9 @@ chkout-exec:
 -include ${CHKOUT_CONF_DIR}/${CHKOUT}.${VCS}.chkout.mk
 -include ${THIRD_PARTY_DIR}/checkout.${VCS}.mk
 
-# FIXME: Customize some pre-initializations if needed.
 pre-init:
 	${Q}:
 
-# FIXME: Customize some post-initializations if needed.
 post-init:
 	${Q}:
 
@@ -169,6 +170,4 @@ init: pre-init chkout-exec post-init
 #
 # If you want to re-define commands of some targets, write them here:
 #
-
-# FIXME: More rules if needed ...
 
