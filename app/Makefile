@@ -34,7 +34,14 @@ export THIRD_PARTY_DIR ?= ../3rdpary
 
 
 C_SRCS := $(shell find ./ -name "*.c")
+C_SRCS := $(foreach i, $(filter-out %.priv.c, ${C_SRCS}), \
+    $(if $(wildcard $(basename ${i}).priv.c), $(basename ${i}).priv.c, ${i}) \
+)
+
 CXX_SRCS := $(shell find ./ -name "*.cpp" -o -name "*.cc" -o -name "*.cxx")
+CXX_SRCS := $(foreach i, $(filter-out $(addprefix %.priv, $(suffix ${CXX_SRCS})), ${CXX_SRCS}), \
+    $(if $(wildcard $(basename ${i}).priv$(suffix ${i})), $(basename ${i}).priv$(suffix ${i}), ${i}) \
+)
 
 GOAL := barcode_scanner.elf
 
