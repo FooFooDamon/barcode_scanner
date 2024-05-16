@@ -1,5 +1,5 @@
 /*
- * Common biz definitions.
+ * Common biz declarations and definitions.
  *
  * Copyright (c) 2024 Man Hung-Coeng <udc577@126.com>
  *
@@ -28,6 +28,18 @@ struct conf_file;
 
 typedef int (*biz_func_t)(BIZ_FUN_ARG_LIST);
 
+#define AUTO_BACKEND                    "ANY"
+
+const char* get_backends(void);
+const char* get_camera_backends(void);
+const char* get_stream_backends(void);
+
+bool is_valid_backend(const char *name);
+bool is_valid_camera_backend(const char *name);
+bool is_valid_stream_backend(const char *name);
+
+int backend_name_to_code(const char *name);
+
 #define todo()                          fprintf(stderr, __FILE__ ":%d %s(): todo ...\n", __LINE__, __func__)
 
 #endif /* #ifndef __BIZ_COMMON_HPP__ */
@@ -39,5 +51,8 @@ typedef int (*biz_func_t)(BIZ_FUN_ARG_LIST);
  *
  * >>> 2024-05-10, Man Hung-Coeng <udc577@126.com>:
  *  01. Create.
+ *
+ * >>> 2024-05-16, Man Hung-Coeng <udc577@126.com>:
+ *  01. Add backend macro and function declarations.
  */
 
