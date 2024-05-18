@@ -22,6 +22,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/videoio/registry.hpp>
 
+#include "signal_handling.h"
+
 #include "cmdline_args.hpp"
 
 DECLARE_BIZ_FUN(test_camera)
@@ -69,6 +71,12 @@ DECLARE_BIZ_FUN(test_camera)
 
     while (true)
     {
+        if (sig_check_critical_flag())
+        {
+            fprintf(stderr, "Interrupted by user\n");
+            break;
+        }
+
         if (!vicap.read(frame) || frame.empty())
         {
             fprintf(stderr, "*** Failed to capture frame!\n");
@@ -99,5 +107,6 @@ DECLARE_BIZ_FUN(test_camera)
  *
  * >>> 2024-05-18, Man Hung-Coeng <udc577@126.com>:
  *  01. Eliminate some runtime errors of V4L2.
+ *  02. Check OS signal within biz loop.
  */
 
