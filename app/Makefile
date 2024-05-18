@@ -34,7 +34,7 @@ export NO_PRIV_STUFF := $(strip $(filter-out n N no NO No 0, ${NO_PRIV_STUFF}))
 
 
 
-C_SRCS := $(shell find ./ -name "*.c" | grep -v '\.priv\.c$$')
+C_SRCS := $(shell find ./ ../3rdpary/lazy_coding/c_and_cpp/ -name "*.c" | grep -v '\.priv\.c$$')
 ifeq (${NO_PRIV_STUFF},)
     C_SRCS := $(foreach i, $(filter-out %.priv.c, ${C_SRCS}), \
         $(if $(wildcard $(basename ${i}).priv.c), $(basename ${i}).priv.c, ${i}) \
@@ -57,7 +57,8 @@ QT_VER := $(shell echo ${QT_INC} | sed 's/.*qt\([0-9]\+\)/\1/')
 ifneq ($(shell [ ${QT_VER} -gt 5 ] && echo Y || echo ""),)
 CXX_STD := c++17
 endif
-CXX_INCLUDES := -I/usr/include/opencv4 -I${QT_INC}
+CXX_DEFINES := -DMAX_DETECT_THREADS=$(if ${MAX_DETECT_THREADS},${MAX_DETECT_THREADS},64)
+CXX_INCLUDES := -I/usr/include/opencv4 -I${QT_INC} -I../3rdpary/lazy_coding/c_and_cpp/native
 CXX_LDFLAGS := -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui -lopencv_videoio \
     -lQt${QT_VER}Core -lQt${QT_VER}Gui -lZXing
 
