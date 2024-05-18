@@ -36,12 +36,15 @@ typedef struct cmd_args
 #endif
     std::string source;
     std::string format;
+    std::string backend;
+    std::string dev_prefix;
     std::vector<std::string> *img_files;
     float fps;
-    int camera_id;
-    int camera_id_max;
+    int dev_id;
+    int dev_id_max;
     int width;
     int height;
+    int detect_threads;
     bool use_gui;
 } cmd_args_t;
 
@@ -58,5 +61,9 @@ void assert_parsed_args(const cmd_args_t &args);
  *
  * >>> 2024-05-10, Man Hung-Coeng <udc577@126.com>:
  *  01. Create.
+ *
+ * >>> 2024-05-18, Man Hung-Coeng <udc577@126.com>:
+ *  01. struct cmd_args: Rename camera_id* to dev_id*;
+ *      add dev_prefix, detect_threads and backend.
  */
 

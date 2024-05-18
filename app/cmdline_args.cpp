@@ -30,6 +30,7 @@
 #include <iostream>
 
 #include "versions.hpp"
+#include "biz_common.hpp"
 
 // Must be coincident with the copyright info at the beginning of this file.
 #ifndef COPYRIGHT_STRING
@@ -77,8 +78,12 @@
 
 #endif // #ifdef HAS_LOGGER
 
-#define CAMERA_ID_AUTO                  -1
-#define DEFAULT_CAMERA_ID_MAX           32
+#define IMG_SOURCE_CANDIDATES           "camera,pic,video"
+#define IMG_SOURCE_DEFAULT              "camera"
+
+#define DEVICE_ID_AUTO                  -1
+#define DEFAULT_DEVICE_ID_MAX           32
+#define DEFAULT_DEVICE_PREFIX           "/dev/video"
 
 #define CAP_WIDTH_MIN                   128
 #define CAP_WIDTH_MAX                   4096
@@ -95,8 +100,11 @@
 #define CAP_FORMAT_CANDIDATES           "auto,nv12,grey"
 #define CAP_FORMAT_DEFAULT              "auto"
 
-#define IMG_SOURCE_CANDIDATES           "camera,pic,video"
-#define IMG_SOURCE_DEFAULT              "camera"
+#ifndef MAX_DETECT_THREADS
+#define MAX_DETECT_THREADS              64
+#endif
+
+#define DEFAULT_BACKEND                 AUTO_BACKEND
 
 cmd_args_t parse_cmdline(int argc, char **argv)
 {
@@ -149,6 +157,10 @@ cmd_args_t parse_cmdline(int argc, char **argv)
         },
 #endif
         {
+            { "gui", no_argument, nullptr, 'g' },
+            "\t\tUse GUI for extra displaying."
+        },
+        {
             { "biz", required_argument, nullptr, 'b' },
             " {" BIZ_TYPE_CANDIDATES "}\n\t\t\tSpecify biz type. Default to " BIZ_TYPE_DEFAULT "."
         },
@@ -157,23 +169,27 @@ cmd_args_t parse_cmdline(int argc, char **argv)
             " {" IMG_SOURCE_CANDIDATES "}\n\t\t\tSpecify barcode source. Default to " IMG_SOURCE_DEFAULT "."
         },
         {
-            { "camera-id", required_argument, nullptr, 'i' },
-            " {" CSTR(CAMERA_ID_AUTO) ",0,1,2,...}\n\t\t\tSpecify camera ID."
-            " Default to " CSTR(CAMERA_ID_AUTO) " (auto selected)."
+            { "device-id", required_argument, nullptr, 'i' },
+            " {" CSTR(DEVICE_ID_AUTO) ",0,1,2,...}\n\t\t\tSpecify device ID."
+            " Default to " CSTR(DEVICE_ID_AUTO) " (auto selected)."
         },
         {
-            { "camera-id-max", required_argument, nullptr, 'I' },
-            "\tSpecify the upper bound of camera ID for auto mode."
-            "\n\t\t\tDefault to " CSTR(DEFAULT_CAMERA_ID_MAX) "."
+            { "device-id-max", required_argument, nullptr, 'I' },
+            "\tSpecify the upper bound of device ID for auto mode."
+            "\n\t\t\tDefault to " CSTR(DEFAULT_DEVICE_ID_MAX) "."
+        },
+        {
+            { "device-prefix", required_argument, nullptr, 0 },
+            " PREFIX\n\t\t\tSpecify prefix of device node. Default to " DEFAULT_DEVICE_PREFIX "."
         },
         {
             { "width", required_argument, nullptr, 'W' },
-            " WIDTH\n\t\t\tSet capture width to WIDTH ranging from " CSTR(CAP_WIDTH_MIN) " to " CSTR(CAP_WIDTH_MAX)
+            " WIDTH\n\t\t\tSet frame width to WIDTH ranging from " CSTR(CAP_WIDTH_MIN) " to " CSTR(CAP_WIDTH_MAX)
             ".\n\t\t\tDefault to " CSTR(CAP_WIDTH_DEFAULT) " (px)."
         },
         {
             { "height", required_argument, nullptr, 'H' },
-            " HEIGHT\n\t\t\tSet capture height to HEIGHT ranging from " CSTR(CAP_HEIGHT_MIN) " to " CSTR(CAP_HEIGHT_MAX)
+            " HEIGHT\n\t\t\tSet frame height to HEIGHT ranging from " CSTR(CAP_HEIGHT_MIN) " to " CSTR(CAP_HEIGHT_MAX)
             ".\n\t\t\tDefault to " CSTR(CAP_HEIGHT_DEFAULT) " (px)."
         },
         {
@@ -183,11 +199,15 @@ cmd_args_t parse_cmdline(int argc, char **argv)
         },
         {
             { "format", required_argument, nullptr, 0 },
-            " {" CAP_FORMAT_CANDIDATES "}\n\t\t\tSpecify capture format. Default to " CAP_FORMAT_DEFAULT "."
+            " {" CAP_FORMAT_CANDIDATES "}\n\t\t\tSpecify frame format. Default to " CAP_FORMAT_DEFAULT "."
         },
         {
-            { "gui", no_argument, nullptr, 'g' },
-            "\t\tUse GUI for extra displaying."
+            { "detect-threads", required_argument, nullptr, 0 },
+            " {0,1,2,...," CSTR(MAX_DETECT_THREADS) "}\n\t\t\tSpecify number of detect threads. Default to 0 (auto)."
+        },
+        {
+            { "backend", required_argument, nullptr, 'B' },
+            "\n\t\t\tSpecify software backend. Default to " DEFAULT_BACKEND "."
         },
     };
     std::vector<struct option> long_options;
@@ -232,11 +252,14 @@ cmd_args_t parse_cmdline(int argc, char **argv)
 #endif
     result.source = IMG_SOURCE_DEFAULT;
     result.format = CAP_FORMAT_DEFAULT;
-    result.camera_id = CAMERA_ID_AUTO;
-    result.camera_id_max = DEFAULT_CAMERA_ID_MAX;
+    result.dev_id = DEVICE_ID_AUTO;
+    result.dev_id_max = DEFAULT_DEVICE_ID_MAX;
+    result.dev_prefix = DEFAULT_DEVICE_PREFIX;
     result.fps = CAP_FPS_DEFAULT;
     result.width = CAP_WIDTH_DEFAULT;
     result.height = CAP_HEIGHT_DEFAULT;
+    result.detect_threads = 0;
+    result.backend = DEFAULT_BACKEND;
 
     while (true)
     {
@@ -271,11 +294,18 @@ cmd_args_t parse_cmdline(int argc, char **argv)
                 result.log_file = optarg;
             else if (0 == strcmp(long_opt, "loglevel"))
                 result.log_level = optarg;
+#else
+            else if (abbr_map["debug"] == c)
+                result.debug = true;
 #endif
             else if (0 == strcmp(long_opt, "fps"))
                 result.fps = atof(optarg);
             else if (0 == strcmp(long_opt, "format"))
                 result.format = optarg;
+            else if (0 == strcmp(long_opt, "detect-threads"))
+                result.detect_threads = atoi(optarg);
+            else if (0 == strcmp(long_opt, "device-prefix"))
+                result.dev_prefix = optarg;
             else
             {
                 fprintf(stderr, "*** Are you forgetting to handle --%s option??\n", long_opt);
@@ -292,18 +322,21 @@ cmd_args_t parse_cmdline(int argc, char **argv)
             result.use_gui = true;
         else if (abbr_map["source"] == c)
             result.source = optarg;
-        else if (abbr_map["camera-id"] == c)
-            result.camera_id = atoi(optarg);
-        else if (abbr_map["camera-id-max"] == c)
-            result.camera_id_max = atoi(optarg);
+        else if (abbr_map["device-id"] == c)
+            result.dev_id = atoi(optarg);
+        else if (abbr_map["device-id-max"] == c)
+            result.dev_id_max = atoi(optarg);
         else if (abbr_map["width"] == c)
             result.width = atoi(optarg);
         else if (abbr_map["height"] == c)
             result.height = atoi(optarg);
+        else if (abbr_map["backend"] == c)
+            result.backend = optarg;
         else if (abbr_map["help"] == c) // NOTE: Branches below rarely need customizing.
         {
             const char *slash = strrchr(argv[0], '/');
             const char *program_name = (nullptr == slash) ? argv[0] : (slash + 1);
+            const std::string &backend_desc = std::string(" {") + get_camera_backends() + "}";
 
             printf("\n%s - %s\n\nUsage: %s %s\n\n", program_name, BRIEF_INTRO, program_name, USAGE_FORMAT);
             for (const auto &rule : OPTION_RULES)
@@ -311,8 +344,9 @@ cmd_args_t parse_cmdline(int argc, char **argv)
                 const struct option &opt = rule.content;
                 bool has_short = (opt.val > 0);
 
-                printf("  %c%c%c --%s%s\n\n", (has_short ? '-' : ' '), (has_short ? (char)opt.val : ' '),
-                    (has_short ? ',' : ' '), opt.name, rule.description);
+                printf("  %c%c%c --%s%s%s\n\n", (has_short ? '-' : ' '), (has_short ? (char)opt.val : ' '),
+                    (has_short ? ',' : ' '), opt.name, (('B' == opt.val) ? backend_desc.c_str() : ""),
+                    rule.description);
             }
             exit(EXIT_SUCCESS);
         }
@@ -324,14 +358,12 @@ cmd_args_t parse_cmdline(int argc, char **argv)
 #ifndef HAS_LOGGER
         else if (abbr_map["verbose"] == c)
             result.verbose = true;
-        else if (abbr_map["debug"] == c)
-            result.debug = true;
 #endif
         else if ('?' == c || ':' == c)
             exit(EINVAL); // getopt_long() will print the reason.
         else // This case should never happen.
         {
-            fprintf(stderr, "?? getopt returned character code 0%o ??\n", c);
+            fprintf(stderr, "?? getopt returned character code 0x%x ??\n", c);
             exit(EINVAL);
         }
     } // while (true)
@@ -372,6 +404,8 @@ void assert_parsed_args(const cmd_args_t &args)
 #ifdef HAS_LOGGER
         { "log file", args.log_file.c_str() },
         { "log level", args.log_level.c_str() },
+        { "device prefix", args.dev_prefix.c_str() },
+        { "backend", args.backend.c_str() },
 #endif
     };
     const struct
@@ -385,7 +419,8 @@ void assert_parsed_args(const cmd_args_t &args)
         { "log level", args.log_level.c_str(), LOG_LEVEL_CANDIDATES },
 #endif
         { "image source", args.source.c_str(), IMG_SOURCE_CANDIDATES },
-        { "capture format", args.format.c_str(), CAP_FORMAT_CANDIDATES },
+        { "frame format", args.format.c_str(), CAP_FORMAT_CANDIDATES },
+        { "backend", args.backend.c_str(), get_camera_backends() },
     };
 
     for (const auto &arg : required_str_args)
@@ -409,9 +444,12 @@ void assert_parsed_args(const cmd_args_t &args)
         }
     }
 
-    assert_comparable_arg("capture width", args.width, CAP_WIDTH_MIN, CAP_WIDTH_MAX);
-    assert_comparable_arg("capture height", args.height, CAP_HEIGHT_MIN, CAP_HEIGHT_MAX);
-    assert_comparable_arg("capture FPS", args.fps, (float)CAP_FPS_MIN, (float)CAP_FPS_MAX);
+    assert_comparable_arg("device id max", args.dev_id_max, 0, 99999);
+    assert_comparable_arg("device id", args.dev_id, -1, args.dev_id_max);
+    assert_comparable_arg("frame width", args.width, CAP_WIDTH_MIN, CAP_WIDTH_MAX);
+    assert_comparable_arg("frame height", args.height, CAP_HEIGHT_MIN, CAP_HEIGHT_MAX);
+    assert_comparable_arg("frame FPS", args.fps, (float)CAP_FPS_MIN, (float)CAP_FPS_MAX);
+    assert_comparable_arg("detect thread count", args.detect_threads, 0, MAX_DETECT_THREADS);
 
     if ("camera" != args.source && args.img_files->empty())
     {
@@ -427,5 +465,10 @@ void assert_parsed_args(const cmd_args_t &args)
  *
  * >>> 2024-05-10, Man Hung-Coeng <udc577@126.com>:
  *  01. Create.
+ *
+ * >>> 2024-05-18, Man Hung-Coeng <udc577@126.com>:
+ *  01. Fix the bug of parsing --debug option.
+ *  02. Rename option --camera-id* to --device-id*.
+ *  03. Add option --device-prefix, --detect-threads and --backend.
  */
 

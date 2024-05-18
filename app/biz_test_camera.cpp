@@ -20,38 +20,46 @@
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/videoio.hpp>
+#include <opencv2/videoio/registry.hpp>
 
 #include "cmdline_args.hpp"
 
 DECLARE_BIZ_FUN(test_camera)
 {
-    int cam_id = parsed_args.camera_id;
+    int cam_id = parsed_args.dev_id;
     cv::VideoCapture vicap;
+    cv::VideoCaptureAPIs backend = (cv::VideoCaptureAPIs)backend_name_to_code(parsed_args.backend.c_str());
 
-    if (parsed_args.camera_id < 0)
+    //printf("%s\n", cv::getBuildInformation().c_str());
+    printf("Specified backend: %s\n", parsed_args.backend.c_str());
+
+    for (int i = cam_id; i < parsed_args.dev_id_max + 1; ++i)
     {
-        for (int i = 0; i < parsed_args.camera_id_max + 1; ++i)
-        {
-            if (vicap.open(i)) // NOTE: "/dev/videoX" does not work.
-                break;
-        }
+        if (i < 0 || (cam_id >=0 && i != cam_id))
+            continue;
+
+        // for backends preferring path string to id integer, V4L2 for example
+        std::string path = cv::format("%s%d", parsed_args.dev_prefix.c_str(), i);
+
+        if (((cv::CAP_V4L == backend) ? false : vicap.open(i, backend)) || vicap.open(path, backend) || cam_id >= 0)
+            break;
     }
-    else
-        vicap.open(cam_id);
 
     if (!vicap.isOpened())
     {
         fprintf(stderr, "*** Failed to open camera!\n");
         return -EXIT_FAILURE;
     }
-    printf("Camera backend name: %s\n", vicap.getBackendName().c_str());
+    printf("Actual backend: %s\n", vicap.getBackendName().c_str());
 
     vicap.set(cv::CAP_PROP_FRAME_WIDTH, parsed_args.width);
     vicap.set(cv::CAP_PROP_FRAME_HEIGHT, parsed_args.height);
     vicap.set(cv::CAP_PROP_FPS, parsed_args.fps);
-    /*vicap.set(cv::CAP_PROP_FORMAT, -1);
-    vicap.set(cv::CAP_PROP_FOURCC, V4L2_PIX_FMT_NV12); // V4L2_PIX_FMT_GREY */
+    if ("auto" != parsed_args.format && "AUTO" != parsed_args.format)
+    {
+        // vicap.set(cv::CAP_PROP_FORMAT, -1); // TODO: converted from parsed_args.format
+        // vicap.set(cv::CAP_PROP_FOURCC, V4L2_PIX_FMT_NV12); // TODO: converted from parsed_args.format
+    }
 
     cv::Mat frame;
     const std::string &WINDOW_NAME = "Camera Test (Press Esc to exit)";
@@ -61,8 +69,7 @@ DECLARE_BIZ_FUN(test_camera)
 
     while (true)
     {
-        vicap >> frame;
-        if (frame.empty())
+        if (!vicap.read(frame) || frame.empty())
         {
             fprintf(stderr, "*** Failed to capture frame!\n");
             break;
@@ -70,6 +77,8 @@ DECLARE_BIZ_FUN(test_camera)
 
         cv::imshow(WINDOW_NAME, frame);
 
+        // NOTE: The waitKey() is necessary for HighGUI to perform some housekeeping tasks.
+        //       Without it, the image won't display and the window might lock up.
         if (cv::waitKey(1) == ESC_KEY_CODE)
             break;
     }
@@ -87,5 +96,8 @@ DECLARE_BIZ_FUN(test_camera)
  *
  * >>> 2024-05-10, Man Hung-Coeng <udc577@126.com>:
  *  01. Create.
+ *
+ * >>> 2024-05-18, Man Hung-Coeng <udc577@126.com>:
+ *  01. Eliminate some runtime errors of V4L2.
  */
 
