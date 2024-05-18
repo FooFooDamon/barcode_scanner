@@ -57,7 +57,8 @@ QT_VER := $(shell echo ${QT_INC} | sed 's/.*qt\([0-9]\+\)/\1/')
 ifneq ($(shell [ ${QT_VER} -gt 5 ] && echo Y || echo ""),)
 CXX_STD := c++17
 endif
-CXX_DEFINES := -DMAX_DETECT_THREADS=$(if ${MAX_DETECT_THREADS},${MAX_DETECT_THREADS},64)
+C_DEFINES := -U__STRICT_ANSI__
+CXX_DEFINES := -DMAX_DETECT_THREADS=$(if ${MAX_DETECT_THREADS},${MAX_DETECT_THREADS},64) -DNEED_OS_SIGNALS
 CXX_INCLUDES := -I/usr/include/opencv4 -I${QT_INC} -I../3rdpary/lazy_coding/c_and_cpp/native
 CXX_LDFLAGS := -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui -lopencv_videoio \
     -lQt${QT_VER}Core -lQt${QT_VER}Gui -lZXing
