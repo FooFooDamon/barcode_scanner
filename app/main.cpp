@@ -20,6 +20,8 @@
 
 #include <map>
 
+#include "signal_handling.h"
+
 #include "versions.hpp"
 #include "cmdline_args.hpp"
 #include "biz_test_camera.hpp"
@@ -63,12 +65,19 @@ void logger_finalize(void)
 #endif
 }
 
-int register_signals(const cmd_args_t &args, const conf_file_t &conf)
+static int register_signals(const cmd_args_t &args, const conf_file_t &conf)
 {
 #ifdef NEED_OS_SIGNALS
-    todo();
+    int err = sig_simple_register();
+
+    if (err < 0)
+    {
+        fprintf(stderr, "sig_simple_register() failed: %s\n", sig_error(err));
+        return EXIT_FAILURE;
+    }
 #endif
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
 int main(int argc, char **argv)
@@ -139,5 +148,8 @@ lbl_unload_conf:
  *  01. Support detecting from multiple image files.
  *  02. Add a normal biz type of detecting from camera (unimplemented),
  *      and a test biz type of capturing frames from camera.
+ *
+ * >>> 2024-05-18, Man Hung-Coeng <udc577@126.com>:
+ *  01. Register several OS signals.
  */
 
