@@ -16,8 +16,6 @@
  * limitations under the License.
 */
 
-#include "biz_detect_from_images.hpp"
-
 #include <iostream>
 
 #include <opencv2/core/mat.hpp>
@@ -34,6 +32,7 @@
 #include <QtGui/QGuiApplication>
 
 #include "cmdline_args.hpp"
+#include "biz_common.hpp"
 
 DECLARE_BIZ_FUN(detect_from_images)
 {

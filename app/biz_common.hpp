@@ -28,6 +28,10 @@ struct conf_file;
 
 typedef int (*biz_func_t)(BIZ_FUN_ARG_LIST);
 
+extern DECLARE_BIZ_FUN(test_camera);
+extern DECLARE_BIZ_FUN(detect_from_camera);
+extern DECLARE_BIZ_FUN(detect_from_images);
+
 #define AUTO_BACKEND                    "ANY"
 
 const char* get_backends(void);
@@ -54,5 +58,8 @@ int backend_name_to_code(const char *name);
  *
  * >>> 2024-05-16, Man Hung-Coeng <udc577@126.com>:
  *  01. Add backend macro and function declarations.
+ *
+ * >>> 2024-05-19, Man Hung-Coeng <udc577@126.com>:
+ *  01. Declare all biz functions in this file.
  */
 

@@ -16,15 +16,14 @@
  * limitations under the License.
 */
 
-#include "biz_test_camera.hpp"
+#include "signal_handling.h"
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/videoio/registry.hpp>
 
-#include "signal_handling.h"
-
 #include "cmdline_args.hpp"
+#include "biz_common.hpp"
 
 DECLARE_BIZ_FUN(test_camera)
 {

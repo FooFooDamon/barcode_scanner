@@ -16,10 +16,10 @@
  * limitations under the License.
 */
 
-#include "biz_detect_from_camera.hpp"
-
 #include <errno.h>
 #include <stdio.h>
+
+#include "biz_common.hpp"
 
 DECLARE_BIZ_FUN(detect_from_camera)
 {

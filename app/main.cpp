@@ -18,15 +18,13 @@
 
 #include <stdio.h>
 
-#include <map>
-
 #include "signal_handling.h"
+
+#include <map>
 
 #include "versions.hpp"
 #include "cmdline_args.hpp"
-#include "biz_test_camera.hpp"
-#include "biz_detect_from_images.hpp"
-#include "biz_detect_from_camera.hpp"
+#include "biz_common.hpp"
 
 typedef struct conf_file
 {
