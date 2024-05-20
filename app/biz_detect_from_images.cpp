@@ -48,7 +48,7 @@ DECLARE_BIZ_FUN(detect_from_images)
 
         if (image.cols <= 0 || image.rows <= 0)
         {
-            fprintf(stderr, "*** Image file does not exist, or failed to parse it: %s\n", img_file.c_str());
+            fprintf(stderr, "\n*** Image file does not exist, or failed to parse it: %s\n", img_file.c_str());
             ret = -EXIT_FAILURE;
             continue;
         }
@@ -59,7 +59,7 @@ DECLARE_BIZ_FUN(detect_from_images)
 
         if (ZXing::DecodeStatus::NoError != result.status())
         {
-            std::cerr << "*** Failed to detect: " << ZXing::ToString(result.status()) << std::endl;
+            fprintf(stderr, "\n%s: *** Failed to detect: %s\n", img_file.c_str(), ZXing::ToString(result.status()));
             ret = -EXIT_FAILURE;
             continue;
         }
@@ -68,7 +68,7 @@ DECLARE_BIZ_FUN(detect_from_images)
         ret = EXIT_SUCCESS;
 
         if (has_multi_files)
-            std::cout << "\n" << img_file << ":\n";
+            printf("\n%s:\n", img_file.c_str());
 
         std::cout << indent << "Type: " << ZXing::ToString(result.format()) << std::endl
             << indent <<"Text: " << QString::fromStdWString(result.text()).toStdString() << std::endl
@@ -128,5 +128,8 @@ DECLARE_BIZ_FUN(detect_from_images)
  *
  * >>> 2024-05-10, Man Hung-Coeng <udc577@126.com>:
  *  01. Create.
+ *
+ * >>> 2024-05-20, Man Hung-Coeng <udc577@126.com>:
+ *  01. Improve some error messages.
  */
 
