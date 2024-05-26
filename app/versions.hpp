@@ -24,7 +24,7 @@
 #endif
 
 #ifndef MINOR_VER
-#define MINOR_VER                       1
+#define MINOR_VER                       2
 #endif
 
 #ifndef PATCH_VER
@@ -44,5 +44,8 @@
  *
  * >>> 2024-05-10, Man Hung-Coeng <udc577@126.com>:
  *  01. Create.
+ *
+ * >>> 2024-05-26, Man Hung-Coeng <udc577@126.com>:
+ *  01. V0.2.0.
  */
 
