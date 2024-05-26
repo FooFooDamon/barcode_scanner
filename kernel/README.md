@@ -7,6 +7,8 @@
     > This module is optional. It's needed only if the app is expected to run 
     on a development board.
 
-* 可参考[此项目](https://github.com/FooFooDamon/linux_porting)的`orange-pi-5`子目录。
-    > To get a demo, see the `orange-pi-5` sub-directory of [this project](https://github.com/FooFooDamon/linux_porting).
+* 可参考[此项目](https://github.com/FooFooDamon/linux_porting)的`orange-pi-5`子目录，
+尤其注意摄像头驱动和设备树。
+    > To get a demo, see the `orange-pi-5` sub-directory of [this project](https://github.com/FooFooDamon/linux_porting),
+    especially the camera driver and device tree.
 
