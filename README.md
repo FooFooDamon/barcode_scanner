@@ -11,6 +11,10 @@
     we can use the Android phones as little as possible. As we all know,
     Android phones are the main carriers of rogue apps in some big country.
 
+* 本项目**仅供学习和演示**！**强烈不建议在生产环境使用，尤其是商用**！
+    > This project is **for STUDYINIG and ILLUSTRATION ONLY**!
+    **Use in PRODUCTION environment (especially for commercial purpose) is STRONGLY DISCOURAGED**!
+
 ## 组成 | Components
 
 ### 应用程序（核心） | Application Program (The Core)
@@ -49,6 +53,10 @@
     $
     $ ./barcode_scanner.elf -s pic demo1.jpg demo2.png # Detect images. The --gui is still available but only for the final image
     ````
+
+* `GIF`:
+
+    ![HOW_TO_USE](HOW_TO_USE.gif)
 
 ### 内核系统（可选） | Kernel (Optional)
 
