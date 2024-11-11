@@ -158,7 +158,7 @@ DECLARE_BIZ_FUN(detect_from_camera)
 
     cv::Mat frame;
     std::set<std::string> barcode_items;
-    const std::string &WINDOW_NAME = "Camera Test (Press Esc to exit)";
+    const std::string &WINDOW_NAME = "Barcode Scanner (Press Esc to exit)";
     auto display_func = parsed_args.use_gui ? mark_and_display_frame : do_nothing_to_frame;
 
     fprintf(stderr, "Scanner started, press Ctrl+C whenever you want to stop\n");
@@ -212,5 +212,8 @@ DECLARE_BIZ_FUN(detect_from_camera)
  *
  * >>> 2024-05-21, Man Hung-Coeng <udc577@126.com>:
  *  01. Implement a basic version.
+ *
+ * >>> 2024-11-11, Man Hung-Coeng <udc577@126.com>:
+ *  01. Change the window title to Barcode Scanner.
  */
 
