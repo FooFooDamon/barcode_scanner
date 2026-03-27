@@ -1,7 +1,7 @@
 /*
  * Version numbers.
  *
- * Copyright (c) 2024 Man Hung-Coeng <udc577@126.com>
+ * Copyright (c) 2024-2026 Man Hung-Coeng <udc577@126.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@
 #endif
 
 #ifndef PATCH_VER
-#define PATCH_VER                       0
+#define PATCH_VER                       1
 #endif
 
 #ifndef __VER__
@@ -43,9 +43,12 @@
  * ================
  *
  * >>> 2024-05-10, Man Hung-Coeng <udc577@126.com>:
- *  01. Create.
+ *  01. Initial commit.
  *
  * >>> 2024-05-26, Man Hung-Coeng <udc577@126.com>:
  *  01. V0.2.0.
+ *
+ * >>> 2026-03-27, Man Hung-Coeng <udc577@126.com>:
+ *  01. V0.2.1.
  */
 
