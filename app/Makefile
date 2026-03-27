@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 #
-# Copyright (c) 2024 Man Hung-Coeng <udc577@126.com>
+# Copyright (c) 2024-2026 Man Hung-Coeng <udc577@126.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ LCS_ALIAS := lazy_coding
 export THIRD_PARTY_DIR ?= ../3rdpary
 export NO_PRIV_STUFF := $(strip $(filter-out n N no NO No 0, ${NO_PRIV_STUFF}))
 
--include ${THIRD_PARTY_DIR}/${LCS_ALIAS}/makefile/__ver__.mk
+-include ${THIRD_PARTY_DIR}/${LCS_ALIAS}/makefiles/__ver__.mk
 
 
 
@@ -63,7 +63,7 @@ CXX_INCLUDES := -I/usr/include/opencv4 -I${QT_INC} -I../3rdpary/lazy_coding/c_an
 CXX_LDFLAGS := -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui -lopencv_videoio \
     -lQt${QT_VER}Core -lQt${QT_VER}Gui -lZXing
 
--include ${THIRD_PARTY_DIR}/${LCS_ALIAS}/makefile/c_and_cpp.mk
+-include ${THIRD_PARTY_DIR}/${LCS_ALIAS}/makefiles/c_and_cpp.mk
 
 
 
@@ -94,7 +94,7 @@ seeds:
 	do \
 		[ ! -s ${THIRD_PARTY_DIR}/checkout.$${i}.mk ] || continue; \
 		$(if ${Q},printf "WGET\t${THIRD_PARTY_DIR}/checkout.$${i}.mk\n";) \
-		wget $(if ${Q},-q) -c -O ${THIRD_PARTY_DIR}/checkout.$${i}.mk "${LCS_URL}/raw/main/makefile/checkout.$${i}.mk"; \
+		wget $(if ${Q},-q) -c -O ${THIRD_PARTY_DIR}/checkout.$${i}.mk "${LCS_URL}/raw/main/makefiles/checkout.$${i}.mk"; \
 	done
 	${Q}for i in ${THIRD_PARTY_PROJECTS}; \
 	do \
@@ -116,10 +116,10 @@ seeds:
 		echo "export CHKOUT_URL := $${CHKOUT_URL}" >> $${MKFILE}; \
 		echo "export CHKOUT_TAIL_PARAMS :=" >> $${MKFILE}; \
 		if [ "$${CHKOUT_ALIAS}" = "${LCS_ALIAS}" ]; then \
-			echo "export CHKOUT_PARTIAL_ITEMS := main/makefile/__ver__.mk \\" >> $${MKFILE}; \
-			echo "    c43cde6b37e91c40ffa9017c4df6271335292228/makefile/c_and_cpp.mk \\" >> $${MKFILE}; \
-			echo "    02defcf79b1fcc61433a9d2b36d2418044d6b484/makefile/linux_driver.mk \\" >> $${MKFILE}; \
-			echo "    main/makefile/stm32_cube_ide.mk \\" >> $${MKFILE}; \
+			echo "export CHKOUT_PARTIAL_ITEMS := main/makefiles/__ver__.mk \\" >> $${MKFILE}; \
+			echo "    5e3a7d172164f9df72e1855d44bf454bb1a9e88c/makefiles/c_and_cpp.mk \\" >> $${MKFILE}; \
+			echo "    5e3a7d172164f9df72e1855d44bf454bb1a9e88c/makefiles/linux_driver.mk \\" >> $${MKFILE}; \
+			echo "    main/makefiles/stm32_cube_ide.mk \\" >> $${MKFILE}; \
 		else \
 			echo "export CHKOUT_PARTIAL_ITEMS := \\" >> $${MKFILE}; \
 		fi; \
